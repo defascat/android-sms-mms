@@ -1,6 +1,5 @@
 package org.softteco.android;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.OutputStream;
 
@@ -21,7 +20,6 @@ import android.widget.RadioButton;
 import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
-import android.widget.ToggleButton;
 
 public class SendSMSProjectActivity extends Activity {
 	private int interval = 60;
@@ -86,7 +84,6 @@ public class SendSMSProjectActivity extends Activity {
 	}
 
 	private void startTask() {
-		debug("" + periodicSwitch.isChecked());
 		if(!periodicSwitch.isChecked()) {
 			runSendingProcess();
 			setStop();
