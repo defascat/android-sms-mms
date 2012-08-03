@@ -23,6 +23,7 @@ import android.widget.Toast;
 
 public class SendSMSProjectActivity extends Activity {
 	private int interval = 60;
+	private int series = 1;
 	private Button buttonStart;
 	private Button buttonStop;
 	private boolean started = false;
@@ -35,13 +36,20 @@ public class SendSMSProjectActivity extends Activity {
 		setContentView(R.layout.main);
 
 		final TextView intervalField = (TextView) findViewById(R.id.interval);
+		final TextView seriesField = (TextView) findViewById(R.id.series);
 		intervalField.setText("" + interval);
-
+		seriesField.setText("" + series);
+		
 		buttonStart = (Button) findViewById(R.id.start);
 		buttonStart.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {
 				if(periodicSwitch.isChecked()) {
-					interval = Integer.parseInt(intervalField.getText().toString());
+					try {
+						interval = Integer.parseInt(intervalField.getText().toString());
+						series = Integer.parseInt(seriesField.getText().toString());
+					} catch(Exception e) {
+						Toast.makeText(SendSMSProjectActivity.this, R.string.error_parsing, Toast.LENGTH_LONG);
+					}
 				}
 				
 				started = true;
@@ -110,10 +118,12 @@ public class SendSMSProjectActivity extends Activity {
 	}
 
 	private void runSendingProcess() {
-		if (((RadioButton) findViewById(R.id.sms)).isChecked()) {
-			sendSms();
-		} else if (((RadioButton) findViewById(R.id.mms)).isChecked()) {
-			sendMms();
+		for(int i = 0 ; i < series; i++) {
+			if (((RadioButton) findViewById(R.id.sms)).isChecked()) {
+				sendSms();
+			} else if (((RadioButton) findViewById(R.id.mms)).isChecked()) {
+				sendMms();
+			}
 		}
 	}
 	

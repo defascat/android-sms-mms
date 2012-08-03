@@ -35,6 +35,16 @@
         android:layout_height="wrap_content"
         android:ems="10"
         android:enabled="false"
+        android:hint="@string/period"
+        android:inputType="number" />
+
+    <EditText
+        android:id="@+id/series"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:ems="10"
+        android:enabled="true"
+        android:hint="@string/series"
         android:inputType="number" />
 
     <Button

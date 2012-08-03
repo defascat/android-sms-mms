@@ -3,5 +3,9 @@
 
     <string name="hello">Hello World, SendSMSProjectActivity!</string>
     <string name="app_name">SendSMSProject</string>
+    <string name="period">Period (in seconds)</string>
+    <string name="series">Series</string>
+    <string name="error_parsing">Hey dude! Check what you write in number fields!</string>
+    
 
 </resources>
