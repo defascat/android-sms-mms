@@ -9,6 +9,7 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -43,13 +44,12 @@ public class SendSMSProjectActivity extends Activity {
 		buttonStart = (Button) findViewById(R.id.start);
 		buttonStart.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {
-				if(periodicSwitch.isChecked()) {
-					try {
-						interval = Integer.parseInt(intervalField.getText().toString());
-						series = Integer.parseInt(seriesField.getText().toString());
-					} catch(Exception e) {
-						Toast.makeText(SendSMSProjectActivity.this, R.string.error_parsing, Toast.LENGTH_LONG);
-					}
+				try {
+					interval = Integer.parseInt(intervalField.getText().toString());
+					series = Integer.parseInt(seriesField.getText().toString());
+				} catch(Exception e) {
+					Toast.makeText(SendSMSProjectActivity.this, R.string.error_parsing, Toast.LENGTH_LONG);
+					return;
 				}
 				
 				started = true;
@@ -93,28 +93,31 @@ public class SendSMSProjectActivity extends Activity {
 
 	private void startTask() {
 		if(!periodicSwitch.isChecked()) {
-			runSendingProcess();
-			setStop();
-			return;
-		}
-		
-		debug("Interval set to " + interval + " seconds.");
-		
-		new AsyncTask<Void, Void, Void>() {
-			@Override
-			protected Void doInBackground(Void... params) {
-				while (true && started) {
-					try {
-						debug("Waiting for " + interval + " seconds.");
-						Thread.sleep(interval * 1000);
-					} catch (InterruptedException e) {
-						e.printStackTrace();
-					}
-					runSendingProcess();
+			new AsyncTask<Void, Void, Void>() {
+				@Override
+				protected Void doInBackground(Void... params) {
+					sendMessageAfterDelay();
+					runOnUiThread(new Runnable(){
+						public void run() {
+							setStop();
+						}
+					});
+					return null;
 				}
-				return null;
-			}
-		}.execute((Void) null);
+			}.execute((Void) null);
+		} else {
+			debug("Interval set to " + interval + " seconds.");
+			
+			new AsyncTask<Void, Void, Void>() {
+				@Override
+				protected Void doInBackground(Void... params) {
+					while (true && started) {
+						sendMessageAfterDelay();
+					}
+					return null;
+				}
+			}.execute((Void) null);
+		}
 	}
 
 	private void runSendingProcess() {
@@ -167,17 +170,24 @@ public class SendSMSProjectActivity extends Activity {
 	}
 
 	private void sendSms() {
-		String[] data = new String[] { "07911326040000F0040B911346610079F60000208062917314080CC8F71D14969741F977FD07" };
-		debug("Sending " + data.length + " SMS.");
-		for (String messageData : data) {
-			Intent intent = new Intent();
-			intent.setClassName("com.android.mms",
-					"com.android.mms.transaction.SmsReceiverService");
-			intent.setAction("android.provider.Telephony.SMS_RECEIVED");
-			intent.putExtra("pdus",
-					new Object[] { hexStringToByteArray(messageData) });
-			intent.putExtra("format", "3gpp");
-			startService(intent);
+		if(Build.VERSION.SDK_INT <= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
+			String[] data = new String[] { "07911326040000F0040B911346610079F60000208062917314080CC8F71D14969741F977FD07" };
+			debug("Sending " + data.length + " SMS.");
+			for (String messageData : data) {
+				Intent intent = new Intent();
+				intent.setClassName("com.android.mms",
+						"com.android.mms.transaction.SmsReceiverService");
+				intent.setAction("android.provider.Telephony.SMS_RECEIVED");
+				intent.putExtra("pdus",
+						new Object[] { hexStringToByteArray(messageData) });
+				intent.putExtra("format", "3gpp");
+				startService(intent);
+			}
+		} else {
+			ContentValues values = new ContentValues();
+			values.put("address", "123456789");
+			values.put("body", "Hey, dude!");
+			getContentResolver().insert(Uri.parse("content://sms/inbox"), values);
 		}
 	}
 
@@ -199,6 +209,20 @@ public class SendSMSProjectActivity extends Activity {
 		if (c >= 'a' && c <= 'f')
 			return (c - 'a' + 10);
 		throw new RuntimeException("Invalid hex char '" + c + "'");
+	}
+
+	private void sendMessageAfterDelay() {
+		try {
+			debug("Waiting for " + interval + " seconds.");
+			Thread.sleep(interval * 1000);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+		try {
+			runSendingProcess();
+		} catch(Exception e) {
+			e.printStackTrace();
+		}
 	}
 
 }
